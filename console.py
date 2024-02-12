@@ -7,6 +7,7 @@ import json
 import os.path
 import re
 import shlex
+from models import storage
 from models.base_model import BaseModel
 from models.engine.file_storage import FileStorage
 from models.user import User
@@ -17,14 +18,13 @@ from models.place import Place
 from models.review import Review
 
 
-
 class HBNBCommand(cmd.Cmd):
     """Command interpreter console class."""
-    
+
     prompt = '(hbnb) '
-    __available_classes = {"BaseModel", "User", "State", "City", "Amenity" \
-                            "Place", "Review"}
-    # __funcs = {"create", "show", "all", "destroy", "update", "count"}
+    __available_classes = {"BaseModel", "User", "State", "City", "Amenity"
+                           "Place", "Review"}
+    #  __funcs = {"create", "show", "all", "destroy", "update", "count"}
 
     def do_EOF(self, arg):
         """EOF command to exit the program.
@@ -37,7 +37,7 @@ class HBNBCommand(cmd.Cmd):
 
         """
         return True
-    
+
     def emptyline(self):
         pass
 
@@ -55,18 +55,17 @@ class HBNBCommand(cmd.Cmd):
             str_arg = ' '.join(a)
             HBNBCommand().onecmd(str_arg)
 
-
     def do_create(self, arg):
         """Creates a new instance of BaseModel, saves it (to the JSON file) \
                 and prints the id.
         """
         if not arg:
-            print ("** class name missing **")
+            print("** class name missing **")
             return
         a = arg.strip().split()
 
         b = cid_exist(a[0], '00')
-        
+
         if a[0] not in HBNBCommand.__available_classes:
             print("** class doesn't exist **")
             return
@@ -74,43 +73,43 @@ class HBNBCommand(cmd.Cmd):
         new_cls = eval(a[0])()
         new_cls.save()
         print(new_cls.id)
-    
+
     def do_show(self, arg):
         """Prints the string representation of an instance based \
                 on the class name and id.
         """
         if not arg:
-            print ("** class name missing **")
-            return
-        
+            print("** class name missing **")
+            return False
+
         a = shlex.split(arg)
 
-        if len(a) != 2:
-             print("** instance id missing **")
-             return
+        if len(a) < 2:
+            print("** instance id missing **")
+            return False
 
         b = cid_exist(a[0], a[1])
-        
+
         if not b:
             print("** class doesn't exist **")
-            return
-        
-        if len(b) != 3:
+            return False
+
+        if len(b) < 3:
             print("** no instance found **")
-            return
-        
+            return False
+
         print((b[2].all())[b[1]])
-    
+
     def do_count(self, arg):
         """Retrieve the number of instances of a class."""
-        
+
         fs = FileStorage()
         fs.reload()
         fs_obj = fs.all()
         if arg:
             a = shlex.split(arg)
-            k = [str(val) for key, val in fs_obj.items() \
-                    if a[0] in key.split('.')]
+            k = [str(val) for key, val in fs_obj.items()
+                 if a[0] in key.split('.')]
             if not k:
                 print('0')
             else:
@@ -123,28 +122,28 @@ class HBNBCommand(cmd.Cmd):
                 change into the JSON file).
         """
         if not arg:
-            print ("** class name missing **")
-            return
-        
+            print("** class name missing **")
+            return False
+
         a = shlex.split(arg)
 
-        if len(a) != 2:
-             print("** instance id missing **")
-             return
+        if len(a) < 2:
+            print("** instance id missing **")
+            return False
 
         b = cid_exist(a[0], a[1])
-        
+
         if not b:
             print("** class doesn't exist **")
-            return
-        
-        if len(b) != 3:
+            return False
+
+        if len(b) < 3:
             print("** no instance found **")
-            return
-        
+            return False
+
         b_obj = b[2].all()
-        # b[2] is a FileStorage object retured from cid_exist function
-        # b[1] is a key in FileStorage.__objects corresponding to object ID 
+        #  b[2] is a FileStorage object retured from cid_exist function
+        #  b[1] is a key in FileStorage.__objects corresponding to object ID
         del b_obj[b[1]]
         b[2].save()
 
@@ -157,7 +156,8 @@ class HBNBCommand(cmd.Cmd):
         fs_obj = fs.all()
         if arg:
             a = shlex.split(arg)
-            k = [str(val) for key, val in fs_obj.items() if a[0] in key.split('.')]
+            k = [str(val) for key, val in fs_obj.items()
+                 if a[0] in key.split('.')]
             if not k:
                 print("** class doesn't exist **")
             else:
@@ -168,56 +168,55 @@ class HBNBCommand(cmd.Cmd):
 
     def do_update(self, arg):
         """ Updates an instance based on the class name and id by adding or \
-                updating attribute and save the change into the JSON file.
+            updating attribute and save the change into the JSON file.
         usage: update <class name> <id> <attribute name> "<attribute value>".
         """
 
         if not arg:
-            print ("** class name missing **")
-            return
+            print("** class name missing **")
+            return False
 
         a = shlex.split(arg)
 
-        dct_o_patt = "^\{\w+\:?\w+\:?$"
-        dct_c_patt = "^\w+\:?\w+\:?\}$"
+        dct_o_patt = r"^\{\w+\:?\w+\:?$"
+        dct_c_patt = r"^\w+\:?\w+\:?\}$"
         mc = re.match(dct_c_patt, a[-1])
         mo = re.match(dct_o_patt, a[2])
 
         if mc and mo:
-            p_dct = "\{|\}|\:|,"
+            p_dct = r"\{|\}|\:|,"
             p_str = re.split(p_dct, ','.join(a[2:]))
             a = a[0:2] + p_str[1:-1]
 
         attr = a[2:]
         if len(a) < 2:
-             print("** instance id missing **")
-             return
+            print("** instance id missing **")
+            return False
 
         if len(a) < 3:
-             print("** attribute name missing **")
-             return
+            print("** attribute name missing **")
+            return False
 
         if len(attr) % 2 != 0:
-             print("**value missing **")
-             return
+            print("** value missing **")
+            return False
 
         b = cid_exist(a[0], a[1])
-        
         if not b:
             print("** class doesn't exist **")
-            return
-        
-        if len(b) != 3:
+            return False
+
+        if len(b) < 3:
             print("** no instance found **")
-            return
+            return False
 
         fs = b[2]
         fs_obj = fs.all()
         bmodel = fs_obj[b[1]]
 
-        int_patt = "^\d+$"
-        flt_patt = "^\d+(\.){1}\d+$"
-        for k in range(0, len(attr), 2): # list is [class, id, key1, val1, ..}
+        int_patt = r"^\d+$"
+        flt_patt = r"^\d+(\.){1}\d+$"
+        for k in range(0, len(attr), 2):  # list: [cls, id, k1, v1, k2, v2..}
             v = k + 1
             val = attr[v]
             if not val:
@@ -255,16 +254,17 @@ def cid_exist(cls, oid):
             return k
     return k
 
+
 def splitter(arg):
     """splits argument based on pattern"""
-    pattern1 = '\w+( \"?(\w+\-*)+\"?)+'
-    pattern2 = '\w+\.\S+' 
+    pattern1 = r'\w+( \"?(\w+\-*)+\"?)+'
+    pattern2 = r'\w+\.\S+'
     match1 = re.match(pattern1, arg)
     match2 = re.match(pattern2, arg)
     if match1 and match1.group() is arg:
         return shlex.split(arg)
     elif match2:
-        pattern = "(?<!\d)\.|,|\(|\)"
+        pattern = r"(?<!\d)\.|,|\(|\)"
         result = re.split(pattern, arg)
         res = []
         for i in result:
@@ -275,5 +275,5 @@ def splitter(arg):
         return [arg]
 
 
-if  __name__ == '__main__':
+if __name__ == '__main__':
     HBNBCommand().cmdloop()
