@@ -22,7 +22,7 @@ class HBNBCommand(cmd.Cmd):
     """Command interpreter console class."""
 
     prompt = '(hbnb) '
-    __available_classes = {"BaseModel", "User", "State", "City", "Amenity"
+    __available_classes = {"BaseModel", "User", "State", "City", "Amenity",
                            "Place", "Review"}
     #  __funcs = {"create", "show", "all", "destroy", "update", "count"}
 
