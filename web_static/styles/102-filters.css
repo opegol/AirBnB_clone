@@ -6,7 +6,7 @@
     border: 1px solid #DDDDDD;
     border-radius: 4px;
     text-align: right;
-    padding-right: 30px;
+    padding-right: 3%;
 }
  .container .filters button {
     font-size: 18px;
@@ -43,9 +43,9 @@
 }
 .container .filters h4 {
     font-weight: 400;
-    font-size: 14px;
+    font-size: 1em;
     padding-left: 20%;
-    margin-top: 0;
+    margin-top: 1%;
     margin-bottom: auto;
 }
 .locations .popover, .amenities .popover {
